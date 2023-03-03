@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 app = Flask(__name__)
@@ -11,3 +12,6 @@ db = SQLAlchemy(app)
 
 app.app_context().push()
 db.create_all()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
