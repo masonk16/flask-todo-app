@@ -1,10 +1,9 @@
 import os
 from flask import Flask, flash, redirect, render_template, request, jsonify, Blueprint, abort
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager
-from flask_login import UserMixin
+from flask_login import UserMixin, LoginManager, login_user
 from flask_sqlalchemy import SQLAlchemy
-from forms import RegisterForm
+from forms import RegisterForm, LoginForm
 
 app = Flask(__name__)
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -71,6 +70,19 @@ def register():
             db.session.add(user)
             db.session.commit()
             return redirect('/login')
+
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit:
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and check_password_hash(user.password, form.password.data):
+            login_user(user)
+            return redirect('/todos')
+        flash("Invalid details")
+
+    return render_template('login.html', form=form)
 
 
 if __name__ == '__main__':
