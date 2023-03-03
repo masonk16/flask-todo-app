@@ -1,8 +1,10 @@
 import os
-from flask import Flask
+from flask import Flask, flash, redirect, render_template, request, jsonify, Blueprint, abort
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from forms import RegisterForm
 
 app = Flask(__name__)
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -42,6 +44,7 @@ class Task(db.Model):
 app.app_context().push()
 db.create_all()
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -50,6 +53,24 @@ def load_user(user_id):
 @app.route('/')
 def hello_world():
     return 'Hello World!'
+
+
+@app.route('/register', methods = ['POST','GET'])
+def register():
+    form = RegisterForm()
+    if request.method == 'GET':
+        return render_template('register.html', form=form)
+
+    if request.method == 'POST':
+        if form.validate_on_submit:
+            user = User(first_name=form.first_name.data,
+                        last_name=form.last_name.data,
+                        email=form.email.data,
+                        password=generate_password_hash(form.password.data)
+                        )
+            db.session.add(user)
+            db.session.commit()
+            return redirect('/login')
 
 
 if __name__ == '__main__':
